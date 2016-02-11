@@ -164,6 +164,7 @@ func LinearBackoff(try int) {
 // http://docs.aws.amazon.com/general/latest/gr/api-retries.html
 func AwsRetry(req *http.Request, res *http.Response, err error) bool {
 	noSuchHostErr := "no such host"
+	tempNameResErr := "temporary failure in name resolution"
 	if err != nil {
 		if err == io.EOF {
 			log.Warnf(
@@ -185,13 +186,14 @@ func AwsRetry(req *http.Request, res *http.Response, err error) bool {
 				// extract error string from DNSErr. Examples of DNSError
 				// "lookup login.microsoftonline.com on 10.0.2.4:53: no such host"
 				// "lookup management.azure.com on 10.0.2.4:53: no such host",
+				// "lookup login.microsoftonline.com: Temporary failure in name resolution"
 				// breaks down to DNSErr:{Err:"no such host", Name:"management.azure.com",
 				// Server:"10.0.2.4:53", IsTimeout:false}
 				dnsErrStr = strings.TrimSpace(strings.ToLower(dnsErr.Err))
 			}
 			e := operr.Err.Error()
 			if e == syscall.ECONNRESET.Error() || e == syscall.ECONNABORTED.Error() ||
-				dnsErrStr == noSuchHostErr {
+				dnsErrStr == noSuchHostErr || dnsErrStr == tempNameResErr {
 				log.Warnf(
 					"Retryable network error on (%s %s)\n%s",
 					req.Method,
