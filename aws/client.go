@@ -210,7 +210,7 @@ func AwsRetry(req *http.Request, res *http.Response, err error) bool {
 	}
 
 	// Retry if we get a 5xx series error.
-	if res.StatusCode == 429 || res.StatusCode >= 500 && res.StatusCode < 600 {
+	if (res.StatusCode == 429) || (res.StatusCode >= 500 && res.StatusCode < 600) {
 		dump, _ := httputil.DumpResponse(res, false)
 		log.Warnf(
 			"Retryable error on (%s %s)\n%v", req.Method, req.URL.String(), string(dump))
